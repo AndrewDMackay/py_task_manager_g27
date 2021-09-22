@@ -1,3 +1,4 @@
+import re
 from flask import Flask, render_template, request, redirect
 from flask import Blueprint
 from repositories import task_repository
@@ -38,19 +39,40 @@ def create_task():
     task_repository.save(task)
     return redirect('/tasks')
 
-
 # SHOW
 # GET '/tasks/<id>'
+
+@tasks_blueprint.route("/tasks/<id>", strict_slashes=False, methods=['GET'])
+def show_task(id):
+    task = task_repository.select(id)
+    return render_template('tasks/show.html', task = task)
 
 # EDIT
 # GET '/tasks/<id>/edit'
 
+@tasks_blueprint.route("/tasks/<id>/edit", strict_slashes=False, methods=['GET'])
+def edit_task(id):
+    task = task_repository.select(id)
+    users = user_repository.select_all()
+    return render_template('tasks/edit.html', task = task, all_users = users)
+
 # UPDATE
 # PUT '/tasks/<id>'
+@tasks_blueprint.route("/tasks/<id>", strict_slashes=False, methods=['POST'])
+def update_task(id):
+    description = request.form['description']
+    user_id = request.form['user_id']
+    duration = request.form['duration']
+    completed = request.form['completed']
+    user = user_repository.select(user_id)
+    task = Task(description, user, duration, completed, id)
+    task_repository.update(task)
+    return redirect('/tasks')
 
 # DELETE
 # DELETE '/tasks/<id>'
+
 @tasks_blueprint.route("/tasks/<id>/delete", strict_slashes=False, methods=['POST'])
 def delete_task(id):
     task_repository.delete(id)
-    return redirect('/tasks/')
+    return redirect('/tasks')
